@@ -29,6 +29,33 @@
       margin: 0;
       padding: 0;
     }
+
+    /* === Dark Cluster Colors === */
+    .marker-cluster-small {
+      background-color: rgba(180, 0, 0, 0.8);
+      color: #fff;
+      border: 2px solid #fff;
+    }
+    .marker-cluster-medium {
+      background-color: rgba(120, 0, 0, 0.85);
+      color: #fff;
+      border: 2px solid #fff;
+    }
+    .marker-cluster-large {
+      background-color: rgba(50, 0, 0, 0.9);
+      color: #fff;
+      border: 2px solid #fff;
+    }
+
+    /* Tooltip styling */
+    .leaflet-tooltip {
+      background: rgba(0, 0, 0, 0.8);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 12px;
+    }
   </style>
 </head>
 <body>
@@ -43,17 +70,17 @@
       attributionControl: false,
     });
 
-    // Add background layer
+    // Background layer
     L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
       maxZoom: 12,
       minZoom: 3,
     }).addTo(map);
 
-    // Create marker cluster group
+    // Marker cluster group
     let markerLayer = L.markerClusterGroup();
     map.addLayer(markerLayer);
 
-    // === Function to render markers ===
+    // === Render markers ===
     function renderPoints(latArr, lonArr, countArr, stateArr) {
       markerLayer.clearLayers();
 
@@ -65,12 +92,20 @@
 
         if (!isNaN(lat) && !isNaN(lon)) {
           const marker = L.circleMarker([lat, lon], {
-            radius: Math.min(20, 6 + val / 40),
-            color: "#FF0000",
+            radius: Math.min(18, 6 + val / 40),
+            color: "#FF3333",
             fillColor: "#FF0000",
-            fillOpacity: 0.7,
-            weight: 1,
-          }).bindPopup(`<b>${state}</b><br>Count: ${val}`);
+            fillOpacity: 0.9,
+            weight: 1.2,
+          });
+
+          // Tooltip only (no popup)
+          marker.bindTooltip(`<b>${state}</b><br>Count: ${val}`, {
+            permanent: false,
+            direction: "top",
+            opacity: 0.9
+          });
+
           markerLayer.addLayer(marker);
         }
       }
@@ -80,7 +115,7 @@
       }
     }
 
-    // === 1️⃣ Load data via URL parameters (works standalone) ===
+    // === 1️⃣ Load data via URL parameters ===
     const params = new URLSearchParams(window.location.search);
     const lats = params.get("lat")?.split(",") || [];
     const lons = params.get("lon")?.split(",") || [];
@@ -91,11 +126,10 @@
       renderPoints(lats, lons, counts, states);
     }
 
-    // === 2️⃣ Listen for Grafana postMessage events ===
+    // === 2️⃣ Grafana postMessage listener ===
     window.addEventListener("message", (event) => {
       const data = event.data;
       if (!data || !data.lat || !data.long || !data.count) return;
-
       renderPoints(data.lat, data.long, data.count, data.state);
     });
   </script>
